@@ -2,6 +2,7 @@
 let restDuration = 30; // Default rest duration in seconds
 let currentWorkout;
 let currentExerciseIndex = 0;
+let currentSetNumber = 1; // Keep track of current set number
 let isResting = false;
 let sessionData = []; // Accumulates data over multiple sessions
 
@@ -39,7 +40,7 @@ function populateDaySelect() {
     workoutData.forEach((workout, index) => {
         const option = document.createElement('option');
         option.value = index;
-        option.textContent = workout.day;
+        option.textContent = workout.day + ' - ' + workout.focus;
         daySelect.appendChild(option);
     });
 }
@@ -55,13 +56,14 @@ daySelect.addEventListener('change', () => {
     }
     currentWorkout = workoutData[daySelect.value];
     currentExerciseIndex = 0;
+    currentSetNumber = 1;
     isResting = false;
     sessionData = []; // Reset session data when changing days
     displayExercise();
     updateProgressBar();
 });
 
-// Display the current exercise
+// Display the current exercise and set
 function displayExercise() {
     // Update progress bar
     updateProgressBar();
@@ -84,7 +86,7 @@ function displayExercise() {
     exerciseContainer.appendChild(progressText);
 
     // Rest duration input on first exercise
-    if (currentExerciseIndex === 0 && !isResting) {
+    if (currentExerciseIndex === 0 && currentSetNumber === 1 && !isResting) {
         const restInput = document.createElement('input');
         restInput.type = 'number';
         restInput.placeholder = 'Rest duration in seconds (default 30)';
@@ -97,9 +99,6 @@ function displayExercise() {
         exerciseContainer.appendChild(restInput);
     }
 
-    // Capture the current exercise index
-    const exerciseIndex = currentExerciseIndex;
-
     // Handle Supersets
     if (exerciseItem.superset) {
         const supersetDiv = document.createElement('div');
@@ -107,24 +106,24 @@ function displayExercise() {
 
         const supersetLabel = document.createElement('div');
         supersetLabel.classList.add('superset-label');
-        supersetLabel.textContent = 'Superset:';
+        supersetLabel.textContent = `Superset - Set ${currentSetNumber} of ${exerciseItem.superset[0].sets}`;
         supersetDiv.appendChild(supersetLabel);
 
         exerciseItem.superset.forEach((exercise, idx) => {
-            const exerciseDetails = createExerciseDetails(exercise, idx, exerciseIndex, true);
+            const exerciseDetails = createExerciseDetails(exercise, idx, currentExerciseIndex, true);
             supersetDiv.appendChild(exerciseDetails);
         });
 
         const completeBtn = document.createElement('button');
         completeBtn.id = 'complete-btn';
-        completeBtn.innerHTML = '<i class="fas fa-check"></i> Complete Superset';
-        completeBtn.setAttribute('aria-label', 'Complete Superset');
-        completeBtn.addEventListener('click', () => completeExercise(exerciseItem.superset, exerciseIndex, true));
+        completeBtn.innerHTML = '<i class="fas fa-check"></i> Complete Superset Set';
+        completeBtn.setAttribute('aria-label', 'Complete Superset Set');
+        completeBtn.addEventListener('click', () => completeExercise(exerciseItem.superset, currentExerciseIndex, true));
         supersetDiv.appendChild(completeBtn);
 
         exerciseContainer.appendChild(supersetDiv);
     } else {
-        const exerciseDetails = createExerciseDetails(exerciseItem, 0, exerciseIndex);
+        const exerciseDetails = createExerciseDetails(exerciseItem, 0, currentExerciseIndex);
         exerciseContainer.appendChild(exerciseDetails);
 
         if (exerciseItem.duration) {
@@ -133,7 +132,7 @@ function displayExercise() {
             durationInput.type = 'number';
             durationInput.placeholder = `Duration in seconds (default ${exerciseItem.duration})`;
             durationInput.value = exerciseItem.duration;
-            durationInput.id = `exercise-${exerciseIndex}-duration`;
+            durationInput.id = `exercise-${currentExerciseIndex}-duration`;
             durationInput.setAttribute('aria-label', 'Enter Duration');
             exerciseContainer.appendChild(durationInput);
 
@@ -143,16 +142,16 @@ function displayExercise() {
             startBtn.setAttribute('aria-label', 'Start Exercise Timer');
 
             // Capture the exerciseIndex
-            startBtn.addEventListener('click', () => startExerciseTimer(exerciseItem, exerciseIndex));
+            startBtn.addEventListener('click', () => startExerciseTimer(exerciseItem, currentExerciseIndex));
             exerciseContainer.appendChild(startBtn);
         } else {
             const completeBtn = document.createElement('button');
             completeBtn.id = 'complete-btn';
-            completeBtn.innerHTML = '<i class="fas fa-check"></i> Complete Exercise';
-            completeBtn.setAttribute('aria-label', 'Complete Exercise');
+            completeBtn.innerHTML = '<i class="fas fa-check"></i> Complete Set';
+            completeBtn.setAttribute('aria-label', 'Complete Set');
 
             // Capture the exerciseIndex
-            completeBtn.addEventListener('click', () => completeExercise([exerciseItem], exerciseIndex));
+            completeBtn.addEventListener('click', () => completeExercise([exerciseItem], currentExerciseIndex));
             exerciseContainer.appendChild(completeBtn);
         }
     }
@@ -166,6 +165,7 @@ function displayExercise() {
         if (confirm('Are you sure you want to skip this exercise?')) {
             if (currentExerciseIndex < currentWorkout.exercises.length - 1) {
                 currentExerciseIndex++;
+                currentSetNumber = 1;
                 displayExercise();
             } else {
                 // Workout complete
@@ -190,90 +190,87 @@ function createExerciseDetails(exercise, idx = 0, exerciseIndex, isSuperset = fa
     exerciseDetails.classList.add('exercise-details');
 
     const exerciseTitle = document.createElement('h2');
-    exerciseTitle.textContent = exercise.name;
+    if (isSuperset) {
+        exerciseTitle.textContent = `${exercise.name}`;
+    } else {
+        exerciseTitle.textContent = `${exercise.name} - Set ${currentSetNumber} of ${exercise.sets}`;
+    }
     exerciseDetails.appendChild(exerciseTitle);
 
     const exerciseDescription = document.createElement('p');
     exerciseDescription.textContent = exercise.description;
     exerciseDetails.appendChild(exerciseDescription);
 
-    let exerciseInfoText = `Sets: ${exercise.sets}`;
+    let exerciseInfoText = '';
     if (exercise.reps) {
-        exerciseInfoText += `, Reps: ${exercise.reps}`;
+        exerciseInfoText += `Reps: ${exercise.reps}`;
     }
     if (exercise.duration && !exercise.reps) {
-        exerciseInfoText += `, Duration: ${exercise.duration} seconds`;
+        exerciseInfoText += `Duration: ${exercise.duration} seconds`;
     }
-    exerciseInfoText += `, Weight: ${exercise.weight}`;
+    if (exercise.weight) {
+        exerciseInfoText += `, Weight: ${exercise.weight}`;
+    }
 
     const exerciseInfo = document.createElement('p');
     exerciseInfo.textContent = exerciseInfoText;
     exerciseDetails.appendChild(exerciseInfo);
 
-    // Create input fields for each set
-    for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
-        const setLabel = document.createElement('p');
-        setLabel.textContent = `Set ${setNumber}:`;
-        exerciseDetails.appendChild(setLabel);
-
-        // Input for actual weight used
-        const weightInput = document.createElement('input');
-        weightInput.type = 'number';
-        weightInput.placeholder = 'Weight used';
-        weightInput.id = `exercise-${exerciseIndex}-${idx}-weight-set-${setNumber}`;
-        weightInput.setAttribute('aria-label', `Enter Weight Used for Set ${setNumber}`);
-        // Pre-populate with expected weight if numeric
-        if (!isNaN(parseFloat(exercise.weight))) {
-            weightInput.value = parseFloat(exercise.weight);
-        }
-        exerciseDetails.appendChild(weightInput);
-
-        // Input for actual reps completed or duration held
-        const repsOrDurationInput = document.createElement('input');
-        if (exercise.duration && !exercise.reps) {
-            repsOrDurationInput.type = 'number';
-            repsOrDurationInput.placeholder = 'Duration held (seconds)';
-            repsOrDurationInput.setAttribute('aria-label', `Enter Duration Held for Set ${setNumber}`);
-            repsOrDurationInput.value = exercise.duration;
-        } else {
-            repsOrDurationInput.type = 'number';
-            repsOrDurationInput.placeholder = 'Reps completed';
-            repsOrDurationInput.setAttribute('aria-label', `Enter Reps Completed for Set ${setNumber}`);
-            // Pre-populate with expected reps if numeric
-            if (!isNaN(parseInt(exercise.reps))) {
-                repsOrDurationInput.value = parseInt(exercise.reps);
-            }
-        }
-        repsOrDurationInput.id = `exercise-${exerciseIndex}-${idx}-reps-set-${setNumber}`;
-        exerciseDetails.appendChild(repsOrDurationInput);
+    // Input for actual weight used
+    const weightInput = document.createElement('input');
+    weightInput.type = 'number';
+    weightInput.placeholder = 'Weight used';
+    weightInput.id = `exercise-${exerciseIndex}-${idx}-weight-set-${currentSetNumber}`;
+    weightInput.setAttribute('aria-label', `Enter Weight Used for Set ${currentSetNumber}`);
+    // Pre-populate with expected weight if numeric
+    if (!isNaN(parseFloat(exercise.weight))) {
+        weightInput.value = parseFloat(exercise.weight);
     }
+    exerciseDetails.appendChild(weightInput);
+
+    // Input for actual reps completed or duration held
+    const repsOrDurationInput = document.createElement('input');
+    if (exercise.duration && !exercise.reps) {
+        repsOrDurationInput.type = 'number';
+        repsOrDurationInput.placeholder = 'Duration held (seconds)';
+        repsOrDurationInput.setAttribute('aria-label', `Enter Duration Held for Set ${currentSetNumber}`);
+        repsOrDurationInput.value = exercise.duration;
+    } else {
+        repsOrDurationInput.type = 'number';
+        repsOrDurationInput.placeholder = 'Reps completed';
+        repsOrDurationInput.setAttribute('aria-label', `Enter Reps Completed for Set ${currentSetNumber}`);
+        // Pre-populate with expected reps if numeric
+        if (!isNaN(parseInt(exercise.reps))) {
+            repsOrDurationInput.value = parseInt(exercise.reps);
+        }
+    }
+    repsOrDurationInput.id = `exercise-${exerciseIndex}-${idx}-reps-set-${currentSetNumber}`;
+    exerciseDetails.appendChild(repsOrDurationInput);
 
     return exerciseDetails;
 }
 
-// Complete the current exercise
+// Complete the current set or exercise
 function completeExercise(exercises, exerciseIndex, isSuperset = false) {
     let inputsValid = true;
     exercises.forEach((exercise, idx) => {
-        for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
-            const weightInput = document.getElementById(`exercise-${exerciseIndex}-${idx}-weight-set-${setNumber}`);
-            const repsOrDurationInput = document.getElementById(`exercise-${exerciseIndex}-${idx}-reps-set-${setNumber}`);
-            const weightUsed = weightInput.value;
-            const repsOrDuration = repsOrDurationInput.value;
+        const weightInput = document.getElementById(`exercise-${exerciseIndex}-${idx}-weight-set-${currentSetNumber}`);
+        const repsOrDurationInput = document.getElementById(`exercise-${exerciseIndex}-${idx}-reps-set-${currentSetNumber}`);
+        const weightUsed = weightInput.value;
+        const repsOrDuration = repsOrDurationInput.value;
 
-            // Validate inputs
-            if (isNaN(weightUsed) || weightUsed < 0) {
-                weightInput.classList.add('input-error');
-                inputsValid = false;
-            } else {
-                weightInput.classList.remove('input-error');
-            }
-            if (isNaN(repsOrDuration) || repsOrDuration <= 0) {
-                repsOrDurationInput.classList.add('input-error');
-                inputsValid = false;
-            } else {
-                repsOrDurationInput.classList.remove('input-error');
-            }
+        // Validate inputs
+        if (isNaN(weightUsed) || weightUsed < 0) {
+            weightInput.classList.add('input-error');
+            inputsValid = false;
+        } else {
+            weightInput.classList.remove('input-error');
+        }
+        if (isNaN(repsOrDuration) || repsOrDuration <= 0) {
+            repsOrDurationInput.classList.add('input-error');
+            inputsValid = false;
+        } else {
+            repsOrDurationInput.classList.remove('input-error');
         }
     });
 
@@ -282,42 +279,49 @@ function completeExercise(exercises, exerciseIndex, isSuperset = false) {
         return;
     }
 
-    // Proceed with recording data and moving to next exercise
+    // Proceed with recording data and moving to next set or exercise
     exercises.forEach((exercise, idx) => {
-        for (let setNumber = 1; setNumber <= exercise.sets; setNumber++) {
-            // Record inputs
-            const weightUsed = document.getElementById(`exercise-${exerciseIndex}-${idx}-weight-set-${setNumber}`).value;
-            const repsOrDuration = document.getElementById(`exercise-${exerciseIndex}-${idx}-reps-set-${setNumber}`).value;
+        // Record inputs
+        const weightUsed = document.getElementById(`exercise-${exerciseIndex}-${idx}-weight-set-${currentSetNumber}`).value;
+        const repsOrDuration = document.getElementById(`exercise-${exerciseIndex}-${idx}-reps-set-${currentSetNumber}`).value;
 
-            // Store the data
-            const exerciseData = {
-                date: new Date().toLocaleString(),
-                day: currentWorkout.day,
-                exercise: `${exercise.name} (Set ${setNumber})`,
-                weight: weightUsed || '',
-                repsOrDuration: repsOrDuration || '',
-                notes: ''
-            };
+        // Store the data
+        const exerciseData = {
+            date: new Date().toLocaleString(),
+            day: currentWorkout.day,
+            exercise: `${exercise.name} (Set ${currentSetNumber})`,
+            weight: weightUsed || '',
+            repsOrDuration: repsOrDuration || '',
+            notes: ''
+        };
 
-            sessionData.push(exerciseData);
-        }
+        sessionData.push(exerciseData);
     });
 
     saveSessionData();
 
-    if (currentExerciseIndex < currentWorkout.exercises.length - 1) {
-        currentExerciseIndex++;
-        startRestTimer();
+    // Check if there are more sets
+    const totalSets = isSuperset ? exercises[0].sets : exercises[0].sets;
+    if (currentSetNumber < totalSets) {
+        currentSetNumber++;
+        startRestTimer(true); // Rest between sets
     } else {
-        // Workout complete
-        exerciseContainer.innerHTML = '<h2>Workout Complete!</h2>';
+        // Reset set number for next exercise
+        currentSetNumber = 1;
+        if (currentExerciseIndex < currentWorkout.exercises.length - 1) {
+            currentExerciseIndex++;
+            startRestTimer(); // Rest between exercises
+        } else {
+            // Workout complete
+            exerciseContainer.innerHTML = '<h2>Workout Complete!</h2>';
 
-        const exportBtn = document.createElement('button');
-        exportBtn.id = 'export-btn';
-        exportBtn.innerHTML = '<i class="fas fa-file-export"></i> Export Session Data';
-        exportBtn.setAttribute('aria-label', 'Export Session Data');
-        exportBtn.addEventListener('click', exportSessionData);
-        exerciseContainer.appendChild(exportBtn);
+            const exportBtn = document.createElement('button');
+            exportBtn.id = 'export-btn';
+            exportBtn.innerHTML = '<i class="fas fa-file-export"></i> Export Session Data';
+            exportBtn.setAttribute('aria-label', 'Export Session Data');
+            exportBtn.addEventListener('click', exportSessionData);
+            exerciseContainer.appendChild(exportBtn);
+        }
     }
     updateProgressBar();
 }
@@ -388,6 +392,7 @@ function startExerciseTimer(exercise, exerciseIndex) {
 
                 if (currentExerciseIndex < currentWorkout.exercises.length - 1) {
                     currentExerciseIndex++;
+                    currentSetNumber = 1;
                     startRestTimer();
                 } else {
                     // Workout complete
@@ -406,8 +411,8 @@ function startExerciseTimer(exercise, exerciseIndex) {
     }, 1000);
 }
 
-// Start the rest timer between exercises
-function startRestTimer() {
+// Start the rest timer between sets or exercises
+function startRestTimer(betweenSets = false) {
     isResting = true;
     let timeLeft = restDuration;
 
@@ -434,13 +439,26 @@ function startRestTimer() {
     });
     exerciseContainer.appendChild(pauseBtn);
 
+    const skipRestBtn = document.createElement('button');
+    skipRestBtn.id = 'skip-rest-btn';
+    skipRestBtn.innerHTML = '<i class="fas fa-pause"></i> Skip';
+    skipRestBtn.setAttribute('aria-label', 'Skip Timer');
+    skipRestBtn.addEventListener('click', () => {
+        timeLeft = 0;
+    });
+    exerciseContainer.appendChild(skipRestBtn);
+
     const nextExerciseInfo = document.createElement('div');
     nextExerciseInfo.id = 'next-exercise';
-    const nextExerciseItem = currentWorkout.exercises[currentExerciseIndex];
-    if (nextExerciseItem.superset) {
-        nextExerciseInfo.textContent = `Up Next: Superset`;
+    if (betweenSets) {
+        nextExerciseInfo.textContent = `Up Next: Set ${currentSetNumber} of ${currentWorkout.exercises[currentExerciseIndex].sets}`;
     } else {
-        nextExerciseInfo.textContent = `Up Next: ${nextExerciseItem.name}`;
+        const nextExerciseItem = currentWorkout.exercises[currentExerciseIndex];
+        if (nextExerciseItem.superset) {
+            nextExerciseInfo.textContent = `Up Next: Superset`;
+        } else {
+            nextExerciseInfo.textContent = `Up Next: ${nextExerciseItem.name}`;
+        }
     }
     exerciseContainer.appendChild(nextExerciseInfo);
 
@@ -515,6 +533,7 @@ function saveSessionData() {
     localStorage.setItem('sessionData', JSON.stringify(sessionData));
     localStorage.setItem('currentExerciseIndex', currentExerciseIndex);
     localStorage.setItem('currentWorkoutDay', currentWorkout.day);
+    localStorage.setItem('currentSetNumber', currentSetNumber);
 }
 
 // Load session data from localStorage
@@ -522,11 +541,13 @@ function loadSessionData() {
     const savedSessionData = localStorage.getItem('sessionData');
     const savedExerciseIndex = localStorage.getItem('currentExerciseIndex');
     const savedWorkoutDay = localStorage.getItem('currentWorkoutDay');
+    const savedSetNumber = localStorage.getItem('currentSetNumber');
 
-    if (savedSessionData && savedExerciseIndex !== null && savedWorkoutDay) {
+    if (savedSessionData && savedExerciseIndex !== null && savedWorkoutDay && savedSetNumber !== null) {
         if (confirm('Resume previous session?')) {
             sessionData = JSON.parse(savedSessionData);
             currentExerciseIndex = parseInt(savedExerciseIndex);
+            currentSetNumber = parseInt(savedSetNumber);
             const workoutIndex = workoutData.findIndex(workout => workout.day === savedWorkoutDay);
             currentWorkout = workoutData[workoutIndex];
             daySelect.value = workoutIndex;
@@ -545,8 +566,10 @@ function clearSessionData() {
     localStorage.removeItem('sessionData');
     localStorage.removeItem('currentExerciseIndex');
     localStorage.removeItem('currentWorkoutDay');
+    localStorage.removeItem('currentSetNumber');
     sessionData = [];
     currentExerciseIndex = 0;
+    currentSetNumber = 1;
     isResting = false;
 }
 
@@ -750,6 +773,7 @@ function saveExercises() {
     // Reset the current workout
     currentWorkout = workoutData[daySelect.value || 0];
     currentExerciseIndex = 0;
+    currentSetNumber = 1;
     displayExercise();
 }
 

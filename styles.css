@@ -1,6 +1,6 @@
 /* Define CSS Variables for easy theme management */
 :root {
-    --primary-color: #FF5722;      /* Vibrant Orange */
+    --primary-color: #992400;      /* Vibrant Orange */
     --secondary-color: #2196F3;    /* Bright Blue */
     --accent-color: #FFC107;       /* Amber */
     --background-color: #F5F5F5;   /* Light Gray */
@@ -14,7 +14,7 @@ body {
     margin: 0;
     padding: 20px;
     color: var(--text-color);
-    background: linear-gradient(135deg, #FF5722 0%, #FFC107 100%);
+    background: linear-gradient(135deg, #ff22aa 0%, #FFC107 100%);
     background-attachment: fixed;
 }
 
