@@ -1,0 +1,255 @@
+/* Define CSS Variables for easy theme management */
+:root {
+    --primary-color: #FF5722;      /* Vibrant Orange */
+    --secondary-color: #2196F3;    /* Bright Blue */
+    --accent-color: #FFC107;       /* Amber */
+    --background-color: #F5F5F5;   /* Light Gray */
+    --text-color: #212121;         /* Dark Gray */
+}
+
+/* Import the font */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--background-color);
+    margin: 0;
+    padding: 20px;
+    color: var(--text-color);
+    background: linear-gradient(135deg, #FF5722 0%, #FFC107 100%);
+    background-attachment: fixed;
+}
+
+/* Header */
+header h1 {
+    text-align: center;
+    color: var(--primary-color);
+    font-weight: 700;
+    margin-bottom: 30px;
+}
+
+/* Main Content */
+main#app {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Day Selector */
+#day-select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* Buttons */
+button {
+    padding: 12px 20px;
+    font-size: 1em;
+    margin: 10px 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: var(--secondary-color);
+    color: #fff;
+    transition: background-color 0.3s, opacity 0.3s;
+}
+
+button:hover {
+    background-color: #1976D2;
+    opacity: 1;
+}
+
+#start-exercise-btn,
+#pause-btn {
+    background-color: var(--accent-color);
+}
+
+#skip-btn {
+    background-color: #9E9E9E;
+}
+
+#edit-exercises-btn,
+#complete-btn,
+#export-btn,
+.save-exercises-btn {
+    background-color: var(--secondary-color);
+}
+
+.add-exercise-btn {
+    background-color: #4CAF50;
+}
+
+.remove-exercise-btn {
+    background-color: #F44336;
+}
+
+/* Icons in buttons */
+button i {
+    margin-right: 8px;
+}
+
+/* Inputs */
+input[type="number"],
+input[type="text"] {
+    width: calc(50% - 20px);
+    padding: 10px;
+    margin: 5px 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    transition: border-color 0.3s;
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* Exercise Container */
+#exercise-container {
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 5px;
+}
+
+#exercise-container h2 {
+    color: var(--primary-color);
+    margin-top: 0;
+}
+
+#exercise-container p {
+    line-height: 1.6;
+}
+
+/* Progress Bar */
+.progress-bar {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: 13px;
+    overflow: hidden;
+    height: 20px;
+    margin: 20px 0;
+}
+
+.progress {
+    height: 100%;
+    background-color: var(--primary-color);
+    width: 0%;
+    transition: width 0.5s ease-in-out;
+}
+
+/* Timer Display */
+#timer-display {
+    font-size: 3em;
+    text-align: center;
+    color: var(--primary-color);
+    margin: 20px 0;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    padding-top: 60px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 5px;
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Editor Styles */
+#editor-container {
+    text-align: left;
+}
+
+.editor-exercise {
+    border-bottom: 1px solid #ccc;
+    padding: 10px 0;
+}
+
+.editor-exercise input[type="text"],
+.editor-exercise input[type="number"] {
+    width: calc(33% - 20px);
+    padding: 10px;
+    margin: 5px 10px;
+    font-size: 1em;
+}
+
+.add-exercise-btn,
+.save-exercises-btn {
+    background-color: #4CAF50;
+    color: #fff;
+}
+
+.remove-exercise-btn {
+    background-color: #F44336;
+    color: #fff;
+}
+
+/* Input Error */
+.input-error {
+    border-color: #F44336;
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    margin-top: 40px;
+    color: #fff;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    body {
+        padding: 10px;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+        width: calc(100% - 22px);
+        margin: 5px 0;
+    }
+
+    button {
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    #exercise-container {
+        padding: 15px;
+    }
+
+    #timer-display {
+        font-size: 2em;
+    }
+}
